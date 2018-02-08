@@ -12,59 +12,89 @@ Notes:
 Notes:
 
 ```{r Scatterplots}
+library(ggplot2)
+pf <- read.csv('pseudo_facebook.tsv', sep = '\t')
 
+qplot(x=age, y=friend_count, data=pf)
+qplot(age, friend_count, data=pf)
 ```
 
 ***
 
 #### What are some things that you notice right away?
 Response:
+The plot is binomial distributed, with a lot of people at around age 1-3 with a huge count of thousands of friends.
+There are some vertical bars indicating people lying about their age, at 69 and 100.
 
 ***
 
 ### ggplot Syntax
 Notes:
+ggplot is more formal. It will help us with more complicated plots.
 
 ```{r ggplot Syntax}
+qplot(x=age, y=friend_count, data=pf)
 
+ggplot(aes(x=age, y=friend_count), data = pf) +
+  geom_point() +
+  xlim(13, 90)
+
+summary(pf$age)
 ```
 
 ***
 
 ### Overplotting
 Notes:
+Makes it difficult to see all the dots
 
 ```{r Overplotting}
-
+# alpha for transparency, 20 of the dots to be equivalent to one block dot.
+# geom_jitter adds some noise to each age, make it more dispersed
+ggplot(aes(x=age, y=friend_count), data = pf) +
+  geom_jitter(alpha = 1/20) +
+  xlim(13, 90)
 ```
 
 #### What do you notice in the plot?
 Response:
-
+The data points seem to spread out smoothly along the age, and from the darkness of the dot clusters, we can see that the bulk of young users have friends count of less than 1000 for the youth, and less than 500 for age over 30.
 ***
 
 ### Coord_trans()
 Notes:
 
 ```{r Coord_trans()}
-
+ggplot(aes(x=age, y=friend_count), data = pf) +
+  geom_point(alpha=1/20) +
+  xlim(13, 90) 
 ```
 
 #### Look up the documentation for coord_trans() and add a layer to the plot that transforms friend_count using the square root function. Create your plot!
 
+jitter gives us noise, so could gives us friend count below zero, which is not feasible for squre root.
+We need to set the position parameter equal to position jitter, with a mininum height of 0.
 ```{r}
-
+ggplot(aes(x=age, y=friend_count), data = pf) +
+  geom_point(alpha=1/20, position = position_jitter(h = 0)) +
+  xlim(13, 90) +
+  coord_trans(y = "sqrt")
 ```
 
 #### What do you notice?
-
+The bulk friend count for young users is below 1000.
 ***
 
 ### Alpha and Jitter
 Notes:
+Explore the relationship between friends initiated vs age.
 
 ```{r Alpha and Jitter}
-
+summary(pf$age)
+ggplot(aes(age, friendships_initiated), data = pf) +
+  geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
+  xlim(13,90) +
+  coord_trans(y = 'sqrt')
 ```
 
 ***
@@ -78,13 +108,26 @@ Notes:
 Notes:
 
 ```{r Conditional Means}
+install.packages("dplyr")
+library(dplyr)
 
+age_groups <- group_by(pf, age)
+pf.fc_by_age <- summarise(age_groups,
+          friend_count_mean = mean(friend_count),
+          friend_count_median = median(friend_count),
+          n = n())
+pf.fc_by_age <- arrange(pf.fc_by_age, age)
+head(pf.fc_by_age)
+```
 ```
 
 Create your plot!
 
 ```{r Conditional Means Plot}
-
+library(ggplot2)
+ggplot(aes(x = age, y = friend_count_mean), data = pf.fc_by_age)+
+geom_line()+
+xlim(13,90)
 ```
 
 ***
@@ -93,12 +136,24 @@ Create your plot!
 Notes:
 
 ```{r Overlaying Summaries with Raw Data}
-
+summary(pf$age)
+ggplot(aes(age, friendships_initiated), data = pf) +
+  geom_point(alpha = 1/10, position = position_jitter(h = 0), 
+  color = 'orange') +
+  coord_cartesian(xlim = c(13,90), ylim = c(0, 3000)) +
+  coord_trans(y = 'sqrt') +
+  geom_line(stat = 'summary', fun.y = mean) +
+  geom_line(stat = 'summary', fun.y = quantile, fun.args = list(probs = .1),
+  linetype = 2, color = 'blue') +
+  geom_line(stat = 'summary', fun.y = quantile, fun.args = list(probs = .9),
+  linetype = 2, color = 'blue') +
+  geom_line(stat = 'summary', fun.y = quantile, fun.args = list(probs = .5),
+  color = 'blue')
 ```
 
 #### What are some of your observations of the plot?
 Response:
-
+Even for the yound users, it's very unlikely to have friends over 1000.
 ***
 
 ### Moira: Histogram Summary and Scatterplot
