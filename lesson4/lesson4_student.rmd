@@ -167,7 +167,8 @@ Notes:
 Notes:
 
 ```{r Correlation}
-
+cor.test(pf$age, pf$friend_count, method = "pearson")
+with(pf, cor.test(age, friend_count, method = 'pearson'))
 ```
 
 Look up the documentation for the cor.test function.
@@ -181,7 +182,7 @@ Response:
 Notes:
 
 ```{r Correlation on Subsets}
-with(                 , cor.test(age, friend_count))
+with(subset(pf,age<=70) , cor.test(age,friend_count))
 ```
 
 ***
@@ -190,13 +191,19 @@ with(                 , cor.test(age, friend_count))
 Notes:
 
 ***
+Other than pearson method, we can also use kendall or spearman methods.
 
 ## Create Scatterplots
 Notes:
-
 ```{r}
-
+library(ggplot2)
+ggplot(aes(y = likes_received, x = www_likes_received), data = pf, 
+alpha = 1/20) +
+geom_point() +
+scale_x_log10()+
+scale_y_log10()
 ```
+
 
 ***
 
@@ -204,13 +211,17 @@ Notes:
 Notes:
 
 ```{r Strong Correlations}
-
+ggplot(aes(y = likes_received, x = www_likes_received), data = pf) +
+geom_point() +
+xlim(0, quantile(pf$www_likes_received, 0.95)) +
+ylim(0, quantile(pf$likes_received, 0.95)) +
+geom_smooth(method = 'lm', color = 'red')
 ```
 
 What's the correlation betwen the two variables? Include the top 5% of values for the variable in the calculation and round to 3 decimal places.
 
 ```{r Correlation Calcuation}
-
+with(pf,cor.test(www_likes_received, likes_received))
 ```
 
 Response:
@@ -228,24 +239,30 @@ Notes:
 ```{r More Caution With Correlation}
 install.packages('alr3')
 library(alr3)
+data(Mitchell)
+?Mitchell
 ```
 
 Create your plot!
 
 ```{r Temp vs Month}
+ggplot(aes(Month, Temp), data = Mitchell) +
+geom_point()
 
+ggplot(aes(Month, Temp), data = Mitchell) +
+geom_point()
 ```
 
 ***
 
 ### Noisy Scatterplots
 a. Take a guess for the correlation coefficient for the scatterplot.
-
+0.002
 b. What is the actual correlation of the two variables?
 (Round to the thousandths place)
 
 ```{r Noisy Scatterplots}
-
+with(Mitchell, cor.test(Month, Temp))
 ```
 
 ***
@@ -254,7 +271,12 @@ b. What is the actual correlation of the two variables?
 Notes:
 
 ```{r Making Sense of Data}
+ggplot(aes(Month, Temp), data = Mitchell) +
+geom_point() +
+scale_x_continuous(breaks = seq(0, 203, 12))
 
+ggplot(aes(Month%%12, Temp), data = Mitchell) +
+geom_point()
 ```
 
 ***
@@ -263,6 +285,7 @@ Notes:
 
 What do you notice?
 Response:
+Temperatures are higher in the middle of the year, and lower at the beginning and ending of the year. The temperature in each year tends to cluster within certain range.
 
 Watch the solution video and check out the Instructor Notes!
 Notes:
@@ -273,7 +296,11 @@ Notes:
 Notes:
 
 ```{r Understanding Noise: Age to Age Months}
+ggplot(aes(x=age, y= friend_count_mean), data = pf.fc_by_age) +
+geom_line()
 
+head(pf.fc_by_age, 10)
+pf.fc_by_age[17:19,]
 ```
 
 ***
@@ -281,11 +308,29 @@ Notes:
 ### Age with Months Means
 
 ```{r Age with Months Means}
-
+pf$age_with_months <- pf$age + (1 - pf$dob_month/12)
 ```
 
 Programming Assignment
 ```{r Programming Assignment}
+
+library(dplyr)
+pf.fc_by_age_months <- pf %>%
+group_by(age_with_months) %>%
+summarise(friend_count_mean = mean(friend_count),
+          friend_count_median = median(friend_count),
+          n = n()) %>%
+arrange(age_with_months)
+head(pf.fc_by_age_months)
+
+age_with_months_groups <- group_by(pf, age_with_months)
+pf.fc_by_age_months2 <- summarise(age_with_months_groups,
+          friend_count_mean = mean(friend_count),
+          friend_count_median = median(friend_count),
+          n = n())
+pf.fc_by_age_months2 <- arrange(pf.fc_by_age_months2, age_with_months)
+head(pf.fc_by_age_months2)
+
 
 ```
 
@@ -294,7 +339,19 @@ Programming Assignment
 ### Noise in Conditional Means
 
 ```{r Noise in Conditional Means}
+p1 <- ggplot(aes(x = age, y = friend_count_mean),
+data = subset(pf.fc_by_age, age <71)) +
+geom_line() +
+geom_smooth()
 
+p2 <- ggplot(aes(age_with_months, friend_count_mean), data = subset(pf.fc_by_age_months, age_with_months < 71)) +
+geom_line() +
+geom_smooth()
+
+p3 <- ggplot(aes(x = round(age/5)*5, y = friend_count), data = subset(pf, age < 71))+
+geom_line(stat = 'summary', fun.y = mean)
+library(gridExtra)
+grid.arrange(p2,p1,p3, ncol = 1)
 ```
 
 ***
