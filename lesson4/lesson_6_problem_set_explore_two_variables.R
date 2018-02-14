@@ -1,0 +1,19 @@
+# Lesson 6: Problem Set: Explore Two Variables
+# In this problem set, you'll continue
+# to explore the diamonds data set.
+
+# Your first task is to create a
+# scatterplot of price vs x.
+# using the ggplot syntax.
+
+# This assignment is not graded and
+# will be marked as correct when you submit.
+
+# ENTER YOUR CODE BELOW THIS LINE
+# ===========================================
+library(ggplot2)
+diamonds <- diamonds
+ggplot(aes(x = x, y = price), data = diamonds) +
+  geom_point()
+
+

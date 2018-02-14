@@ -238,9 +238,23 @@ hist(ageofmarriage$`2005.0`,
      xlab='Age of First Marriage, collected in 2005', 
      ylab = 'Frequency', 
      main = 'Histogram of Age of First Marriage')
-ggsave('Women1stMarriageAge2005Histogram.png')
+#ggsave('Women1stMarriageAge2005Histogram.png')
 
 qplot(x = 1975.0, y = ..count../sum(..count..),
       data = ageofmarriage, binwidth = 10,
       geom = 'freqpoly') +
   scale_x_continuous(limits=c(1770,2005))
+
+BMI_female <- read.csv("GitHub/DataAnalysiswithRUdacity/lesson3/indicator_BMI female ASM.csv", check.names = F, 1)
+# SBP_female <- read.csv("GitHub/DataAnalysiswithRUdacity/lesson3/Indicator_SBP female ASM.csv", check.names=FALSE)
+# TC_female <- read.csv("GitHub/DataAnalysiswithRUdacity/lesson3/Indicator_TC female ASM.csv", check.names=FALSE)
+# Breast_Death_female <- read.csv("GitHub/DataAnalysiswithRUdacity/lesson3/indicator breast female mortality.csv", check.names=FALSE)
+
+hist(BMI_female$'2000',
+     xlab = 'Female BMI in 2000',
+     ylab = 'Female BMI',
+     main = 'Histogram of Female BMI in 2000')
+qplot(x = '2005', y = ..count../sum(..count..),
+      data = BMI_female,
+      geom = 'freqpoly')
+

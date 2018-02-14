@@ -1,0 +1,243 @@
+---
+title: 'Lesson 6 Problem Set: Explore Two Variables'
+author: "MZ"
+date: "February 13, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. In this problem set, you'll continue
+# to explore the diamonds data set.
+
+# Your first task is to create a
+# scatterplot of price vs x.
+# using the ggplot syntax.
+
+```{r diamonds}
+library(ggplot2)
+diamonds <- diamonds
+ggplot(aes(x = x, y = price), data = diamonds) +
+  geom_point()
+```
+
+# 2. What are your observations about the scatterplot of price vs. x?
+
+The price of the diamonds increases as the x value of the diamonds increases, and the it creases faster and faster. There are some points where the x value is around zero, but the price goes up high, up tp $18000.
+
+# 3. Correlation
+# What is the correlation between price and x?
+# What is the correlation between price and y?
+# What is the correlation between price and z?
+
+```{r}
+with(diamonds, cor.test(x, price))
+with(diamonds, cor.test(y, price))
+with(diamonds, cor.test(z, price))
+```
+
+# 4. Create a simple scatter plot of price vs depth.
+
+```{r scatter plot}
+ggplot(aes(x = depth, y = price), data = diamonds) +
+  geom_point()
+```
+
+# 5. Change the code to make the transparency of the points to be 1/100 of what they are now and mark the x-axis every 2 units. See the instructor notes for two hints.
+
+Hint 1: Use the alpha parameter in geom_point() to adjust the transparency of points. 
+Hint 2: Use scale_x_continuous() with the breaks parameter to adjust the x-axis.
+```{r}
+
+ggplot(aes(x = depth, y = price), data = diamonds) +
+  geom_point(alpha = 1/100) +
+  scale_x_continuous(breaks = seq(0, 80, 2))
+```
+# 6. Based on the scatter plot of depth vs. price, most diamonds are between what values of depth?
+58 an 64
+
+# 7. What is the correlation of depth vs. price?
+```{r}
+with(diamonds, cor.test(depth, price))
+```
+
+# Based on the correlation coefficient, would you use depth to predict the price of a diamond? Why?
+No. The correlation between diamond depth and price is too weak.
+
+# 8. Create a scatterplot of price vs carat and omit the top 1% of price and carat values.
+```{r}
+price_99 <- quantile(diamonds$price, .99)
+carat_99 <- quantile(diamonds$carat, .99)
+ggplot(aes(carat, price), data = subset(diamonds, price <= price_99 | carat <= carat_99)) +
+  geom_point(alpha = 1/20)
+  
+```
+
+# 9. Create a scatterplot of price vs. volume (x * y * z). This is a very rough approximation for a diamond's volume.
+
+# Create a new variable for volume in the diamonds data frame.
+# This will be useful in a later exercise.
+
+# Don't make any adjustments to the plot just yet.
+```{r}
+diamonds$volume <- diamonds$x * diamonds$y * diamonds$z
+ggplot(aes(volume, price), data = diamonds) +
+  geom_point()
+```
+
+# 10. Waht are your observations from the price vs. volume scatter plot?
+The price of diamond increases as the volume increases, and increases more rapidly. The volume of the diamond is mostly below 500 mm^3.
+Did you notice some outliers? Some volumes are 0! There's an expensive diamond with a volume near 4000, and a cheaper diamond with a volume near 900.
+
+# You can find out how many diamonds have 0 volume by using count(diamonds$volume == 0). The count() function comes with the plyr package.
+
+# Note: If you ran the count function from plyr, you need to run this command in R to unload the plyr package.
+## detach("package:plyr", unload=TRUE)
+# The plyr package will conflict with the dplyr package in later exercises.
+
+# 11. What's the correlation of price and volume? Exclude diamonds that have a volume of 0 or that are greater than or equal to 800.
+
+Hint 1: It's helpful to add a variable for volume to the diamonds data frame. You should exclude diamonds that have a volume greater than or equal to 800. Also, exclude diamonds that have a volume of 0. Use the & symbol between two conditions when you subset the original data frame. 
+Hint 2: Subset the diamonds data frame under the conditions and save it into another variable. Use that data frame in the cor() function.
+
+```{r}
+with(subset(diamonds, volume != 0 & volume < 800), cor.test(volume, price))
+```
+
+# 12. Subset the data to exclude diamonds with a volume greater than or equal to 800. Also, exclude diamonds with a volume of 0. Adjust the transparency of the points and add a linear model to the plot. (See the Instructor Notes or look up the documentation of geom_smooth() for more details about smoothers.)
+
+# We encourage you to think about this next question and to post your thoughts in the discussion section.
+# Do you think this would be a useful model to estimate the price of diamonds? Why or why not?
+I think so. Since the smooth line matches in the middle of the data points.
+
+```{r}
+ggplot(aes(volume, price), data = subset(diamonds, volume != 0 & volume < 800)) +
+  geom_point(alpha = 1/10) +
+  geom_smooth(method = 'lm', color = 'red')
+```
+
+# 13. Use the function dplyr package to create a new data frame containing info on diamonds by clarity.
+
+# Name the data frame diamondsByClarity
+
+# The data frame should contain the following variables in this order.
+
+#       (1) mean_price
+#       (2) median_price
+#       (3) min_price
+#       (4) max_price
+#       (5) n
+
+# where n is the number of diamonds in each level of clarity.
+
+Note: If you used the count() function from the plyr package before this exercise, you need to run this command to unload the plyr package: detach("package:plyr", unload=TRUE)
+The plyr package will conflict with the dplyr package when doing this exercise. You will want to complete this exercise in RStudio with ONLY the dplyr package loaded.
+
+The dplyr package.
+Another warning: Version 0.4.0 of dplyr has a bug when using the median function on the summarize layer, depending on the nature of the data being summarized. You may need to cast the data as a numeric (float) type to get the expected results, e.g. median(as.numeric(var)).
+
+```{r}
+library(dplyr)
+diamondsByClarity <- diamonds %>%
+  group_by(clarity) %>%
+  summarise(mean_price = mean(price),
+            median_price = median(price),
+            min_price = min(price),
+            max_price = max(price),
+            n = n()) %>%
+  arrange(clarity)
+```
+
+# 14. We've created summary data frames with the mean price by clarity and color. You can run the code in R to verify what data is in the variables diamonds_mp_by_clarity and diamonds_mp_by_color.
+
+# Your task is to write additional code to create two bar plots on one output image using the grid.arrange() function from the package gridExtra.
+
+Hint: Save each plot into a variable and pass the two variables to grid.arrange(). Be sure you have installed and loaded the gridExtra package.
+
+```{r}
+diamonds_by_clarity <- group_by(diamonds, clarity)
+diamonds_mp_by_clarity <- summarise(diamonds_by_clarity, mean_price = mean(price))
+
+diamonds_by_color <- group_by(diamonds, color)
+diamonds_mp_by_color <- summarise(diamonds_by_color, mean_price = mean(price))
+
+p1 <- ggplot(aes(clarity, mean_price), data = diamonds_mp_by_clarity) +
+  geom_col()
+p2 <- ggplot(aes(color, mean_price), data = diamonds_mp_by_color) +
+  geom_col()
+
+library(gridExtra)
+grid.arrange(p1, p2, ncol = 2)
+
+```
+
+# 15. What do you notice in each of the bar chars for mean price by clarity and mean price by color.
+The mean price decreases as the clarity of the diamond gets better, and there is a peak mean price at the clarity level of SI1. 
+The mean price increases as the color of the diamond gets worse, but the D level color has a slightly higher mean price than the E level color diamonds.
+
+We think something odd is going here. These trends seem to go against our intuition.
+Mean price tends to decrease as clarity improves. The same can be said for color.
+We encourage you to look into the mean price across cut.
+
+```{r}
+diamonds_by_cut <- group_by(diamonds, cut)
+diamonds_mp_by_cut <- summarise(diamonds_by_cut, mean_price = mean(price))
+
+ggplot(aes(cut, mean_price), data = diamonds_mp_by_cut) +
+  geom_col()
+```
+
+
+# 16. The Gapminder website contains over 500 data sets with information about the world's population. Your task is to continue the investigation you did at the end of Problem Set 3 or you can start fresh and choose a different data set from Gapminder.
+
+# If you're feeling adventurous or want to try some data munging see if you can find a data set or scrape one from the web.
+
+# In your investigation, examine pairs of variable and create 2-5 plots that make use of the techniques from Lesson 4.
+
+# You can find a link to the Gapminder website in the Instructor Notes.
+
+# Once you've completed your investigation, create a post in the discussions that includes:
+# 1. the variable(s) you investigated, your observations, and any summary statistics
+# 2. snippets of code that created the plots
+# 3. links to the images of your plots
+
+Gapminder Data
+https://www.gapminder.org/data/
+Hans Rosling's 200 Countries, 200 Years, 4 Minutes
+https://www.youtube.com/watch?v=jbkSRLYSojo
+Save plots using ggsave()
+
+```{r}
+BMI_female <- read.csv("C:/Users/mengn/OneDrive/Documents/GitHub/DataAnalysiswithRUdacity/lesson3/indicator_BMI female ASM.csv", check.names = F, 1)
+SBP_female <- read.csv("C:/Users/mengn/OneDrive/Documents/GitHub/DataAnalysiswithRUdacity/lesson3/Indicator_SBP female ASM.csv", check.names=F, 1)
+TC_female <- read.csv("C:/Users/mengn/OneDrive/Documents/GitHub/DataAnalysiswithRUdacity/lesson3/Indicator_TC female ASM.csv", check.names=FALSE)
+Breast_Death_female <- read.csv("C:/Users/mengn/OneDrive/Documents/GitHub/DataAnalysiswithRUdacity/lesson3/indicator breast female mortality.csv", check.names=FALSE)
+#colnames(BMI_female)[1] <- 'country'
+#colnames(SBP_female)[1] <- 'country'
+library(tidyr)
+BMI <- gather(BMI_female, "year","BMI", 2:length(colnames(BMI_female)))
+names(BMI)[[1]] <- "country"
+SBP <- gather(SBP_female, "year","SBP", 2:length(colnames(SBP_female)))
+names(SBP)[[1]] <- "country"
+
+BMI_and_SBP <- inner_join(BMI,SBP, by = c('country','year'))
+ggplot(aes(BMI, SBP), data = BMI_and_SBP) +
+  geom_point(alpha = 1/10)+
+  labs(title = 'Female SBP vs. BMI')
+
+BMI_and_SBP_comb <- subset(BMI_and_SBP, country == 'China' | country == 'United States'|country == 'Russia' | country == 'Korea, Dem. Rep.')
+ggplot(aes(BMI, SBP), data = BMI_and_SBP_comb) +
+  geom_point()+
+  facet_wrap(~country)
+
+ggplot(aes(BMI, SBP), data = BMI_and_SBP_comb) +
+  geom_smooth()+
+  facet_wrap(~country)
+
+ggplot(aes(BMI, SBP), data = BMI_and_SBP_comb) +
+  geom_line()+
+  facet_wrap(~country)
+```
+
