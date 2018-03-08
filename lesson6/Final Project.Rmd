@@ -1,0 +1,57 @@
+---
+title: "Final Project"
+author: "MZ"
+date: "February 27, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Import and organize data
+
+```{r}
+BMI_female <- read.csv("C:/Users/mengn/OneDrive/Documents/GitHub/DataAnalysiswithRUdacity/lesson3/indicator_BMI female ASM.csv", check.names = F, 1)
+SBP_female <- read.csv("C:/Users/mengn/OneDrive/Documents/GitHub/DataAnalysiswithRUdacity/lesson3/Indicator_SBP female ASM.csv", check.names=F, 1)
+TC_female <- read.csv("C:/Users/mengn/OneDrive/Documents/GitHub/DataAnalysiswithRUdacity/lesson3/Indicator_TC female ASM.csv", check.names=FALSE)
+Breast_Death_female <- read.csv("C:/Users/mengn/OneDrive/Documents/GitHub/DataAnalysiswithRUdacity/lesson3/indicator breast female mortality.csv", check.names=FALSE)
+# colnames(BMI_female)[1] <- 'country'
+# colnames(SBP_female)[1] <- 'country'
+# colnames(TC_female)[1] <- 'country'
+# colnames(Breast_Death_female)[1] <- 'country'
+
+library(tidyr)
+BMI <- gather(BMI_female, "year","BMI", 2:length(colnames(BMI_female)))
+names(BMI)[[1]] <- "country"
+BMI$year <- as.numeric(as.character(BMI$year))
+SBP <- gather(SBP_female, "year","SBP", 2:length(colnames(SBP_female)))
+names(SBP)[[1]] <- "country"
+SBP$year <- as.numeric(as.character(SBP$year))
+TC <- gather(TC_female, "year","TC", 2:length(colnames(TC_female)))
+names(TC)[[1]] <- "country"
+TC$year <- as.numeric(as.character(TC$year))
+Breast_Death <- gather(Breast_Death_female, "year","breast_death", 2:length(colnames(Breast_Death_female)))
+names(Breast_Death)[[1]] <- "country"
+Breast_Death$year <- as.numeric(as.character(Breast_Death$year))
+
+# BMI$year <- factor(BMI$year)
+# SBP$year <- factor(SBP$year)
+# TC$year <- factor(TC$year)
+# Breast_Death$year <- factor(Breast_Death$year)
+
+library(dplyr)
+BMI2 <- inner_join(BMI,SBP, by = c('country','year'))
+BMI3 <- inner_join(BMI2,TC, by = c('country','year'))
+female.health <- inner_join(BMI3,Breast_Death, by = c('country','year'))
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

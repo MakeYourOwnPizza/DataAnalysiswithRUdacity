@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Price Histograms with Facet and Color
+## Price Histograms with Cut and Color
 
 Here's what your plot should look like. Note that the plot in the linked image is using log(price) for the x-axis to adjust for positive skew in the data.
 
@@ -155,7 +155,7 @@ by(pf$prop_initiated, pf$year_joined.bucket, summary)
 What do you think this group's proportion of friendships initiated is higher than the others.
 As time goes by, more and more people know Facebook, so they joined Facebook and made more friends than the early users.
 
-## Price/Carat Binned, Faceted, & Colored
+## Price/Carat Binned, Clarity Faceted, & Color Colored
 ```{r}
 # Create a scatter plot of the price/carat ratio of diamonds. The variable x should be assigned to cut. The points should be colored by diamond color, and the plot should be faceted by clarity.
 
@@ -186,5 +186,150 @@ ggplot(aes(x = cut, y = price/carat), data = diamonds)+
 # 1. the variable(s) you investigated, your observations, and any summary statistics
 # 2. snippets of code that created the plots
 # 3. links to the images of your plots
+
+# Combine four datasets together, to get a dataframe women.health of women's BMI, SBP, TC, and, Breast_Death for each country for a period of years
+BMI_female <- read.csv("C:/Users/mengn/OneDrive/Documents/GitHub/DataAnalysiswithRUdacity/lesson3/indicator_BMI female ASM.csv", check.names = F, 1)
+SBP_female <- read.csv("C:/Users/mengn/OneDrive/Documents/GitHub/DataAnalysiswithRUdacity/lesson3/Indicator_SBP female ASM.csv", check.names=F, 1)
+TC_female <- read.csv("C:/Users/mengn/OneDrive/Documents/GitHub/DataAnalysiswithRUdacity/lesson3/Indicator_TC female ASM.csv", check.names=FALSE)
+Breast_Death_female <- read.csv("C:/Users/mengn/OneDrive/Documents/GitHub/DataAnalysiswithRUdacity/lesson3/indicator breast female mortality.csv", check.names=FALSE)
+
+library(tidyr)
+BMI <- gather(BMI_female, "year","BMI", 2:length(colnames(BMI_female)))
+names(BMI)[[1]] <- "country"
+BMI$year <- as.numeric(as.character(BMI$year))
+SBP <- gather(SBP_female, "year","SBP", 2:length(colnames(SBP_female)))
+names(SBP)[[1]] <- "country"
+SBP$year <- as.numeric(as.character(SBP$year))
+TC <- gather(TC_female, "year","TC", 2:length(colnames(TC_female)))
+names(TC)[[1]] <- "country"
+TC$year <- as.numeric(as.character(TC$year))
+Breast_Death <- gather(Breast_Death_female, "year","breast_death", 2:length(colnames(Breast_Death_female)))
+names(Breast_Death)[[1]] <- "country"
+Breast_Death$year <- as.numeric(as.character(Breast_Death$year))
+
+library(dplyr)
+BMI2 <- inner_join(BMI,SBP, by = c('country','year'))
+BMI3 <- inner_join(BMI2,TC, by = c('country','year'))
+female.health <- inner_join(BMI3,Breast_Death, by = c('country','year'))
+```
+## filter out only valid data with no NA values
+```{r}
+health <- subset(female.health, !is.na(BMI) & !is.na(SBP) & !is.na(TC) & !is.na(breast_death))
+summary(health$BMI)
+health$BMI.level <- cut(health$BMI, c(16, 18.5, 25, 40))
+summary(health$SBP)
+health$SBP.level <- cut(health$SBP, c(80, 120, 140))
+summary(health$TC)
+health$TC.level <- cut(health$TC, c(0, 5.2, 6.2,6.3))
 ```
 
+!is.na(BMI)|!is.na(SBP)|is.na(TC)|
+
+## breast_death Histograms with TC level colored and BMI level faceted
+```{r}
+library(ggplot2)
+ggplot(aes(x = breast_death), data = health) +
+  geom_histogram(aes(color = TC.level)) +
+  facet_wrap(~BMI.level) +
+  scale_fill_brewer(type = 'qual')
+```
+
+## breast_death Histograms with BMI level colored and TC level faceted
+
+```{r}
+ggplot(aes(x = breast_death), data = health) +
+  geom_histogram(aes(color = BMI.level)) +
+  facet_wrap(~TC.level) +
+  scale_fill_brewer(type = 'qual')
+```
+
+
+
+
+
+
+## breast_death Histograms with BMI level colored and SBP level faceted
+
+```{r}
+ggplot(aes(x = breast_death), data = health) +
+  geom_histogram(aes(color = BMI.level)) +
+  facet_wrap(~SBP.level) +
+  scale_fill_brewer(type = 'qual')
+```
+
+
+
+## breast_death Histograms with SBP level colored and BMI level faceted
+
+```{r}
+ggplot(aes(x = breast_death), data = health) +
+  geom_histogram(aes(color = SBP.level)) +
+  facet_wrap(~BMI.level) +
+  scale_fill_brewer(type = 'qual')
+```
+
+## breast_death Histograms with SBP level colored and TC level faceted
+
+```{r}
+ggplot(aes(x = breast_death), data = health) +
+  geom_histogram(aes(color = SBP.level)) +
+  facet_wrap(~TC.level) +
+  scale_fill_brewer(type = 'qual')
+```
+
+
+## breast_death Histograms with TC level colored and SBP level faceted
+
+```{r}
+ggplot(aes(x = breast_death), data = health) +
+  geom_histogram(aes(color = TC.level)) +
+  facet_wrap(~SBP.level) +
+  scale_fill_brewer(type = 'qual')
+```
+
+
+
+## breast_death vs. BMI Scatterplot, TC.level colored & SBP.level faceted
+```{r}
+ggplot(aes(x = BMI, y = breast_death), data = health) +
+  geom_point(aes(color = TC.level)) +
+  facet_wrap(~SBP.level)
+```
+
+## breast_death vs. BMI Scatterplot, SBP.level colored & TC.level faceted
+```{r}
+ggplot(aes(x = BMI, y = breast_death), data = health) +
+  geom_point(aes(color = SBP.level)) +
+  facet_wrap(~TC.level)
+```
+
+
+## breast_death vs. SBP Scatterplot, TC.level colored & BMI.level faceted
+```{r}
+ggplot(aes(x = SBP, y = breast_death), data = health) +
+  geom_point(aes(color = TC.level)) +
+  facet_wrap(~BMI.level)
+```
+
+## breast_death vs. SBP Scatterplot, BMI.level colored & TC.level faceted
+```{r}
+ggplot(aes(x = SBP, y = breast_death), data = health) +
+  geom_point(aes(color = BMI.level)) +
+  facet_wrap(~TC.level)
+```
+
+## breast_death vs. TC Scatterplot, BMI.level colored & SBP.level faceted
+```{r}
+ggplot(aes(x = TC, y = breast_death), data = health) +
+  geom_point(aes(color = BMI.level)) +
+  facet_wrap(~SBP.level)
+```
+
+## breast_death vs. TC Scatterplot, SBP.level colored & BMI.level faceted
+```{r}
+ggplot(aes(x = TC, y = breast_death), data = health) +
+  geom_point(aes(color = SBP.level)) +
+  facet_wrap(~BMI.level)
+```
+
+According to the plots, female's total cholesterol level and systolic blood pressure has significant impact on the deaths caused by breast cancer. Women with SBP measurements higher than 120 mgHH, and TC level between 5.2 and 6,2 mol/L have bigger chance of being dead due to breast cancer.
